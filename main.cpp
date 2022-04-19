@@ -21,7 +21,7 @@ int main()
 	//sigma_color = 0.02;
 	sigma_dist = 0.5;
 	sigma_color = 3;
-	min_sigma_color = 0.7;
+	min_sigma_color = 0.1;
 	//sigma_color = 0.07;
 	sup_pixel_size = 14;
 	cost_threshold = 550.0;
@@ -68,8 +68,8 @@ int main()
 		anomaly_mask.at<uchar>(p) = 255;
 	}
 
-	imwrite("fucasdasdasdsadsadk.png", anomaly_mask);
-	return 0;
+	//imwrite("fucasdasdasdsadsadk.png", anomaly_mask);
+	//return 0;
 
 
 
@@ -103,7 +103,7 @@ int main()
 
 
 	// generate a list of lists consists of superpixels and lts pixels.
-	vector<vector<Point>> sup_pxl_lst = build_superpixel_lst();
+	// vector<vector<Point>> sup_pxl_lst = build_superpixel_lst();
 	
 
 	// initialize the color compensation map difference of the seam_pixel_lst. 
@@ -111,17 +111,17 @@ int main()
 
 
 	// generate for the pxiel-based color blending.
-	//vector<vector<Point>> pixel_wise_lst;
-	//for (Point p : target_pixel_lst)
-	//{
-	//	vector<Point> a;
-	//	a.push_back(p);
-	//	pixel_wise_lst.push_back(a);
-	//}
+	vector<vector<Point>> pixel_wise_lst;
+	for (Point p : target_pixel_lst)
+	{
+		vector<Point> a;
+		a.push_back(p);
+		pixel_wise_lst.push_back(a);
+	}
 
 	// to calculate the color for all pixels in target image.
-	//update_color_comp_map_range_anomaly_ver(pixel_wise_lst);
-	update_color_comp_map_range_anomaly_ver(sup_pxl_lst);
+	update_color_comp_map_range_anomaly_ver(pixel_wise_lst);
+	//update_color_comp_map_range_anomaly_ver(sup_pxl_lst);
 
 
 
