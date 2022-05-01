@@ -33,6 +33,7 @@ void init_color_comp_map(vector<Point> &seam_pixel_lst)
 
 void update_color_comp_map(vector<vector<Point>>& sup_pxl_lst)
 {
+
 	for (vector<Point> lst : sup_pxl_lst)
 	{
 		int x = lst[0].x;
@@ -42,6 +43,7 @@ void update_color_comp_map(vector<vector<Point>>& sup_pxl_lst)
 		color_comp_map.at<Vec3d>(y, x)[1] = color_comp[1];
 		color_comp_map.at<Vec3d>(y, x)[2] = color_comp[2];
 	}
+//#pragma omp parallel for 
 	for (vector<Point> lst : sup_pxl_lst)
 	{
 		int x = lst[0].x;
@@ -217,12 +219,154 @@ vector<double> get_color_comp_value_range(int x, int y)
 	return color_comp;
 }
 
+void update_color_comp_map_range_anomaly_and_parallel_ver(vector<vector<Point>>& sup_pxl_lst)
+{
+
+	//for (vector<Point> lst : sup_pxl_lst)
+	//{
+	//	
+	//	int x = lst[0].x;
+	//	int y = lst[0].y;
+	//	vector<double> color_comp = get_color_comp_value_range_anomaly_and_parallel_ver(x, y);
+	//	color_comp_map.at<Vec3d>(y, x)[0] = color_comp[0];
+	//	color_comp_map.at<Vec3d>(y, x)[1] = color_comp[1];
+	//	color_comp_map.at<Vec3d>(y, x)[2] = color_comp[2];
+	//}
+
+
+	std::for_each(
+	std::execution::par,
+	sup_pxl_lst.begin(),
+	sup_pxl_lst.end(),
+	[&](vector<Point> lst)
+	{   
+		int x = lst[0].x;
+		int y = lst[0].y;
+		vector<double> color_comp = get_color_comp_value_range_anomaly_and_parallel_ver(x, y);
+		color_comp_map.at<Vec3d>(y, x)[0] = color_comp[0];
+		color_comp_map.at<Vec3d>(y, x)[1] = color_comp[1];
+		color_comp_map.at<Vec3d>(y, x)[2] = color_comp[2];
+	});
+
+
+	for (vector<Point> lst : sup_pxl_lst)
+	{
+		int x = lst[0].x;
+		int y = lst[0].y;
+		double aa = color_comp_map.at<Vec3d>(y, x)[0];
+		double bb = color_comp_map.at<Vec3d>(y, x)[1];
+		double cc = color_comp_map.at<Vec3d>(y, x)[2];
+		for (Point pt : lst)
+		{
+			int x = pt.x;
+			int y = pt.y;
+			color_comp_map.at<Vec3d>(y, x)[0] = aa;
+			color_comp_map.at<Vec3d>(y, x)[1] = bb;
+			color_comp_map.at<Vec3d>(y, x)[2] = cc;
+		}
+	}
+}
+
+vector<double> get_color_comp_value_range_anomaly_and_parallel_ver(int x, int y)
+{
+	vector<double> color_comp = { 0.0, 0.0, 0.0 };
+	double weight_sum = 0.0;
+	double a, b;
+	int low_bound = range_map.at<Vec2w>(y, x)[0];
+	int high_bound = range_map.at<Vec2w>(y, x)[1];
+	int range_num = high_bound - low_bound + 1;
+	int total_anomaly_cnt = 0;
+	int max_anomaly_cnt = discarded_seam_pixel_lst.size();
+
+
+	for (int i = 0; i < range_num; i++)
+	{
+		//cout << i + low_bound<<endl;
+		int x_seam = sorted_seam_pixel_lst[i + low_bound].x;
+		int y_seam = sorted_seam_pixel_lst[i + low_bound].y;
+		if (anomaly_mask.at<uchar>(y_seam, x_seam) == 255) total_anomaly_cnt++;
+	}
+
+	double anomaly_ratio = (double)total_anomaly_cnt / (double)range_num;
+
+	//std::vector<int> v(range_num);
+	//std::iota(v.begin(), v.end(), 0);
+	//std::for_each(
+	//	std::execution::par,
+	//	v.begin(),
+	//	v.end(),
+	//	[&](int i)
+	//{   
+	//	int x_seam = sorted_seam_pixel_lst[i + low_bound].x;
+	//	int y_seam = sorted_seam_pixel_lst[i + low_bound].y;
+	//	double weight;
+	//	double dist_diff = pow((x - x_seam), 2) + pow((y - y_seam), 2);
+	//	double color_diff = (pow((double(warped_tar_img.at<Vec3b>(y, x)[0]) - double(warped_tar_img.at<Vec3b>(y_seam, x_seam)[0])), 2)
+	//		+ pow((double(warped_tar_img.at<Vec3b>(y, x)[1]) - double(warped_tar_img.at<Vec3b>(y_seam, x_seam)[1])), 2)
+	//		+ pow((double(warped_tar_img.at<Vec3b>(y, x)[2]) - double(warped_tar_img.at<Vec3b>(y_seam, x_seam)[2])), 2)) / 65025;
+	//	//double new_color_sigma = sigma_color * anomaly_ratio;
+	//	double new_color_sigma = max(sigma_color * anomaly_ratio, min_sigma_color);
+	//	//double new_color_sigma = anomaly_ratio * 5 + sigma_color * (1 - anomaly_ratio);
+	//	a = color_diff / new_color_sigma / new_color_sigma * -1.0;
+	//	b = dist_diff / sigma_dist / sigma_dist / width / width * -1.0;
+	//	weight = exp(a) * exp(b);
+	//	color_comp[0] += color_comp_map.at<Vec3d>(y_seam, x_seam)[0] * weight;
+	//	color_comp[1] += color_comp_map.at<Vec3d>(y_seam, x_seam)[1] * weight;
+	//	color_comp[2] += color_comp_map.at<Vec3d>(y_seam, x_seam)[2] * weight;
+	//	weight_sum += weight;
+	//});
+
+
+
+
+
+
+	for (int i = 0; i < range_num; i++)
+	{
+		int x_seam = sorted_seam_pixel_lst[i + low_bound].x;
+		int y_seam = sorted_seam_pixel_lst[i + low_bound].y;
+		double weight;
+		double dist_diff = pow((x - x_seam), 2) + pow((y - y_seam), 2);
+		double color_diff = (pow((double(warped_tar_img.at<Vec3b>(y, x)[0]) - double(warped_tar_img.at<Vec3b>(y_seam, x_seam)[0])), 2)
+			+ pow((double(warped_tar_img.at<Vec3b>(y, x)[1]) - double(warped_tar_img.at<Vec3b>(y_seam, x_seam)[1])), 2)
+			+ pow((double(warped_tar_img.at<Vec3b>(y, x)[2]) - double(warped_tar_img.at<Vec3b>(y_seam, x_seam)[2])), 2)) / 65025;
+		//double new_color_sigma = sigma_color * anomaly_ratio;
+		double new_color_sigma = max(sigma_color * anomaly_ratio, min_sigma_color);
+		//double new_color_sigma = anomaly_ratio * 5 + sigma_color * (1 - anomaly_ratio);
+		a = color_diff / new_color_sigma / new_color_sigma * -1.0;
+		b = dist_diff / sigma_dist / sigma_dist / width / width * -1.0;
+		weight = exp(a) * exp(b);
+		color_comp[0] += color_comp_map.at<Vec3d>(y_seam, x_seam)[0] * weight;
+		color_comp[1] += color_comp_map.at<Vec3d>(y_seam, x_seam)[1] * weight;
+		color_comp[2] += color_comp_map.at<Vec3d>(y_seam, x_seam)[2] * weight;
+		weight_sum += weight;
+	}
+
+
+	if (weight_sum == 0.0)
+	{
+		color_comp[0] = 0.0;
+		color_comp[1] = 0.0;
+		color_comp[2] = 0.0;
+	}
+	else
+	{
+		color_comp[0] = color_comp[0] / weight_sum;
+		color_comp[1] = color_comp[1] / weight_sum;
+		color_comp[2] = color_comp[2] / weight_sum;
+	}
+
+	return color_comp;
+}
 
 
 void update_color_comp_map_range_anomaly_ver(vector<vector<Point>>& sup_pxl_lst)
 {
+//#pragma omp parallel for
 	for (vector<Point> lst : sup_pxl_lst)
 	{
+		//int nthreads = omp_get_num_threads();
+		//cout << nthreads << endl;
 		int x = lst[0].x;
 		int y = lst[0].y;
 		vector<double> color_comp = get_color_comp_value_range_anomaly_ver(x, y);
@@ -276,7 +420,6 @@ vector<double> get_color_comp_value_range_anomaly_ver(int x, int y)
 	//test_mask.at<uchar>(y, x) = (int)((double)total_anomaly_cnt / (double)range_num * 100);
 	//double anomaly_ratio = (double)total_anomaly_cnt / (double)range_num - (double)discarded_seam_pixel_lst.size() / (double)range_num;
 	double anomaly_ratio = (double)total_anomaly_cnt / (double)range_num;
-
 	for (int i = 0; i < range_num; i++)
 	{
 		int x_seam = sorted_seam_pixel_lst[i + low_bound].x;
@@ -541,61 +684,61 @@ vector<double> get_color_comp_value(int x, int y)
 
 
 
-vector<vector<Point>> build_superpixel_lst()
-{	
-
-	//clock_t start, end;
-	//double cpu_time_used;
-	//start = clock();
-
-
-	Mat  mask, lab_tar_img, blured_lab_tar_img;
-	cvtColor(warped_tar_img, lab_tar_img, COLOR_BGR2Lab);
-	Ptr<cv::ximgproc::SuperpixelSLIC> slic = cv::ximgproc::createSuperpixelSLIC(lab_tar_img, cv::ximgproc::SLIC, sup_pixel_size, ruler);
-
-	slic->iterate();
-	//cout << "hey guys, the segementation is finished!" << endl;
-	//end = clock();
-	//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-	//printf("Time = %f\n", cpu_time_used);
-
-
-	Mat labels;
-	int num_sup_pxl = slic->getNumberOfSuperpixels();
-	vector<vector<Point>> sup_pxl_lst(num_sup_pxl);
-	vector<bool> sup_pxl_in_tar_img(num_sup_pxl, false);
-	slic->getLabels(labels);
-
-	//For dubug purpose
-	//Mat contour_mask, temp;
-	//slic->getLabelContourMask(contour_mask);
-	//warped_tar_img.copyTo(temp);
-	//temp.setTo(Scalar(0, 0, 255), contour_mask);
-	//imwrite("slic_contour.png", temp);
-
-	for (Point pt : target_pixel_lst)
-	{	
-		if (result_from_tar_mask.at<uchar>(pt))
-		{
-			int label = labels.at<int>(pt);
-			sup_pxl_in_tar_img[label] = true;
-			sup_pxl_lst[label].push_back(pt);
-		}	
-	}
-	vector<vector<Point>> refined_sup_pxl_lst;
-	for (vector<Point> a : sup_pxl_lst)
-	{
-		if (!a.empty())
-		{
-			refined_sup_pxl_lst.push_back(a);
-		}
-	}
-	//cout << "hey guys, building list is finished!" << endl;
-	//end = clock();
-	//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-	//printf("Time = %f\n", cpu_time_used);
-	return refined_sup_pxl_lst;
-}
+//vector<vector<Point>> build_superpixel_lst()
+//{	
+//
+//	//clock_t start, end;
+//	//double cpu_time_used;
+//	//start = clock();
+//
+//
+//	Mat  mask, lab_tar_img, blured_lab_tar_img;
+//	cvtColor(warped_tar_img, lab_tar_img, COLOR_BGR2Lab);
+//	Ptr<cv::ximgproc::SuperpixelSLIC> slic = cv::ximgproc::createSuperpixelSLIC(lab_tar_img, cv::ximgproc::SLIC, sup_pixel_size, ruler);
+//
+//	slic->iterate();
+//	//cout << "hey guys, the segementation is finished!" << endl;
+//	//end = clock();
+//	//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+//	//printf("Time = %f\n", cpu_time_used);
+//
+//
+//	Mat labels;
+//	int num_sup_pxl = slic->getNumberOfSuperpixels();
+//	vector<vector<Point>> sup_pxl_lst(num_sup_pxl);
+//	vector<bool> sup_pxl_in_tar_img(num_sup_pxl, false);
+//	slic->getLabels(labels);
+//
+//	//For dubug purpose
+//	//Mat contour_mask, temp;
+//	//slic->getLabelContourMask(contour_mask);
+//	//warped_tar_img.copyTo(temp);
+//	//temp.setTo(Scalar(0, 0, 255), contour_mask);
+//	//imwrite("slic_contour.png", temp);
+//
+//	for (Point pt : target_pixel_lst)
+//	{	
+//		if (result_from_tar_mask.at<uchar>(pt))
+//		{
+//			int label = labels.at<int>(pt);
+//			sup_pxl_in_tar_img[label] = true;
+//			sup_pxl_lst[label].push_back(pt);
+//		}	
+//	}
+//	vector<vector<Point>> refined_sup_pxl_lst;
+//	for (vector<Point> a : sup_pxl_lst)
+//	{
+//		if (!a.empty())
+//		{
+//			refined_sup_pxl_lst.push_back(a);
+//		}
+//	}
+//	//cout << "hey guys, building list is finished!" << endl;
+//	//end = clock();
+//	//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+//	//printf("Time = %f\n", cpu_time_used);
+//	return refined_sup_pxl_lst;
+//}
 
 
 void refine_seam_pixel_lst(vector<Point> seam_pixel_lst, vector<Point>& refined_seam_pixel_lst, vector<Point>& discarded_seam_pixel_lst)
@@ -636,7 +779,7 @@ void refine_seam_pixel_lst(vector<Point> seam_pixel_lst, vector<Point>& refined_
 
 	ordinary_count = count - anomaly_count;
 	double cost = double(ordinary_count * anomaly_count) * pow(out.at<float>(0) - out.at<float>(1), 2) / double(count * count);
-	cout << "The cost is " << cost << endl;
+	//cout << "The cost is " << cost << endl;
 
 	if (cost < cost_threshold)
 	{
@@ -702,9 +845,9 @@ void refine_seam_pixel_lst_based_abs_RGB_diff(vector<Point> seam_pixel_lst, vect
 	double cost1 = double(ordinary_count * anomaly_count) * pow(out1.at<float>(0) - out1.at<float>(1), 2) / double(count * count);
 	double cost2 = double(ordinary_count * anomaly_count) * pow(out2.at<float>(0) - out2.at<float>(1), 2) / double(count * count);
 	double cost3 = double(ordinary_count * anomaly_count) * pow(out3.at<float>(0) - out3.at<float>(1), 2) / double(count * count);
-	cout << "The cost1 is " << cost1 << endl;
-	cout << "The cost2 is " << cost2 << endl;
-	cout << "The cost3 is " << cost3 << endl;
+	//cout << "The cost1 is " << cost1 << endl;
+	//cout << "The cost2 is " << cost2 << endl;
+	//cout << "The cost3 is " << cost3 << endl;
 
 	if (cost1 < cost_threshold && cost2 < cost_threshold && cost3 < cost_threshold)
 	{
@@ -776,11 +919,20 @@ void build_range_map_with_side_addition(vector<Point> sorted_seam_pixel_lst)
 	//Mat chosen_one_2 = imread("test_range.png");
 	//for (Point point : sorted_seam_pixel_lst) chosen_one.at<Vec3b>(point) = 255;
 
+	clock_t start, end;
+	double cpu_time_used;
 
 
 	// march through whole target image.
 	while (true)
 	{
+
+
+
+
+		//start = clock();
+
+
 
 		// find next wavefront
 		time_stamp++;
@@ -803,6 +955,20 @@ void build_range_map_with_side_addition(vector<Point> sorted_seam_pixel_lst)
 			}
 		}
 
+
+
+
+		//end = clock();
+		//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+		//printf("find next Time = %f\n", cpu_time_used);
+		//start = clock();
+		
+		
+		
+		
+		
+		
+		
 		// break from the while loop if there is no next wavefront.
 		if (next_wavefront.size() == 0) break;
 		int reference_all_range_cnt = 0;
@@ -839,9 +1005,25 @@ void build_range_map_with_side_addition(vector<Point> sorted_seam_pixel_lst)
 		if (next_wavefront.size() == reference_all_range_cnt) flag_early_termination = true;
 		//cout << reference_all_range_cnt << " asdasdasdasdasd " << next_wavefront.size() << endl;
 
+
+		//end = clock();
+		//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+		//printf("side propagation Time = %f\n", cpu_time_used);
+		//start = clock();
+		
+
 		// propagate the citation range from neighbors in current wavefront.
-		Mat tmp_range_map;
-		range_map.copyTo(tmp_range_map);
+		//Mat tmp_range_map;
+		//range_map.copyTo(tmp_range_map);
+
+		//end = clock();
+		//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+		//printf("copy Time = %f\n", cpu_time_used);
+		//start = clock();
+
+		//vector<Point> pending_update_pts;
+		vector<int> pending_update_min_ranges, pending_update_max_ranges;
+
 		for (Point point : next_wavefront)
 		{
 			int min_range = std::numeric_limits<int>::max();
@@ -854,16 +1036,83 @@ void build_range_map_with_side_addition(vector<Point> sorted_seam_pixel_lst)
 				if (x_n == -1 || y_n == -1 || x_n >= width || y_n >= height) continue;
 				if (discovered_time_stamp_map.at<ushort>(y_n, x_n) == time_stamp)
 				{
-					if (min_range > tmp_range_map.at<Vec2w>(y_n, x_n)[0]) min_range = tmp_range_map.at<Vec2w>(y_n, x_n)[0];
-					if (max_range < tmp_range_map.at<Vec2w>(y_n, x_n)[1]) max_range = tmp_range_map.at<Vec2w>(y_n, x_n)[1];
+					if (min_range > range_map.at<Vec2w>(y_n, x_n)[0]) min_range = range_map.at<Vec2w>(y_n, x_n)[0];
+					if (max_range < range_map.at<Vec2w>(y_n, x_n)[1]) max_range = range_map.at<Vec2w>(y_n, x_n)[1];
 				}
 			}
-			range_map.at<Vec2w>(point)[0] = min_range;
-			range_map.at<Vec2w>(point)[1] = max_range;
+			//pending_update_pts.push_back(point)
+			//range_map.at<Vec2w>(point)[0] = min_range;
+			//range_map.at<Vec2w>(point)[1] = max_range;
+			pending_update_min_ranges.push_back(min_range);
+			pending_update_max_ranges.push_back(max_range);
+		}
+		
+		for (int idx = 0; idx < next_wavefront.size(); idx++)
+		{
+			range_map.at<Vec2w>(next_wavefront[idx])[0] = pending_update_min_ranges[idx];
+			range_map.at<Vec2w>(next_wavefront[idx])[1] = pending_update_max_ranges[idx];
 		}
 
 
 
+
+
+
+
+
+
+		//// propagate the citation range from neighbors in current wavefront.
+		//Mat tmp_range_map;
+		//range_map.copyTo(tmp_range_map);
+
+		//end = clock();
+		//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+		//printf("copy Time = %f\n", cpu_time_used);
+		//start = clock();
+
+		////vector<Point> pending_update_pts;
+		//vector<int> pending_update_min_ranges, pending_update_max_ranges;
+
+		//for (Point point : next_wavefront)
+		//{
+		//	int min_range = std::numeric_limits<int>::max();
+		//	int max_range = std::numeric_limits<int>::min();
+
+		//	for (int i = 0; i < 8; i++)
+		//	{
+		//		int y_n = point.y + y_offset[i];
+		//		int x_n = point.x + x_offset[i];
+		//		if (x_n == -1 || y_n == -1 || x_n >= width || y_n >= height) continue;
+		//		if (discovered_time_stamp_map.at<ushort>(y_n, x_n) == time_stamp)
+		//		{
+		//			if (min_range > tmp_range_map.at<Vec2w>(y_n, x_n)[0]) min_range = tmp_range_map.at<Vec2w>(y_n, x_n)[0];
+		//			if (max_range < tmp_range_map.at<Vec2w>(y_n, x_n)[1]) max_range = tmp_range_map.at<Vec2w>(y_n, x_n)[1];
+		//		}
+		//	}
+		//	//pending_update_pts.push_back(point)
+		//	//range_map.at<Vec2w>(point)[0] = min_range;
+		//	//range_map.at<Vec2w>(point)[1] = max_range;
+		//	pending_update_min_ranges.push_back(min_range);
+		//	pending_update_max_ranges.push_back(max_range);
+		//}
+
+		//for (int idx = 0; idx < next_wavefront.size(); idx++)
+		//{
+		//	range_map.at<Vec2w>(next_wavefront[idx])[0] = pending_update_min_ranges[idx];
+		//	range_map.at<Vec2w>(next_wavefront[idx])[1] = pending_update_max_ranges[idx];
+		//}
+
+
+
+
+
+
+
+
+
+		//end = clock();
+		//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+		//printf("find range Time = %f\n", cpu_time_used);
 		
 
 
@@ -976,16 +1225,6 @@ void sort_seam_pixel_lst(vector<Point> seam_pixel_lst, vector<Point>& sorted_sea
 
 		}
 	}
-
-	//Mat test_seam_mask = Mat::zeros(warped_tar_img.rows, warped_tar_img.cols, CV_8U);
-	//char a = 255;
-	//for (Point p : sorted_seam_pixel_lst)
-	//{
-	//	test_seam_mask.at<uchar>(p) = a;
-	//	a--;
-	//}
-	//imwrite("test_mask_seam.png", test_seam_mask);
-
 }
 
 

@@ -11,31 +11,22 @@ float ruler;
 Mat test_mask;
 int main()
 {	
-	// Our's v3 
+	// Our's wavefront propagation method
 	clock_t start, end;
 	double cpu_time_used;
 	start = clock();
 
 
-	//sigma_dist = 0.01;
-	//sigma_color = 0.02;
+
 	sigma_dist = 0.5;
 	sigma_color = 3;
 	min_sigma_color = 0.1;
-	//sigma_color = 0.07;
-	sup_pixel_size = 14;
-	cost_threshold = 550.0;
+	//sup_pixel_size = 14;
+	cost_threshold = 500.0;
 	ruler = 5.0f;
 	propagation_coefficient = 20;
 
-	//sigma_dist_aligned = 0.15;
-	//sigma_color_aligned = 1;
 
-	//sigma_dist_misaligned = 0.05;
-	//sigma_color_misaligned = 0.5;
-
-	//sigma_dist_hybrid = 0.15;
-	//sigma_color_hybrid = 1;
 
 	result_from_tar_mask = imread("image/result_from_target.png", IMREAD_GRAYSCALE);
 	seam_mask = imread("image/seam_mask.png", IMREAD_GRAYSCALE);
@@ -68,23 +59,20 @@ int main()
 		anomaly_mask.at<uchar>(p) = 255;
 	}
 
-	//imwrite("fucasdasdasdsadsadk.png", anomaly_mask);
-	//return 0;
 
 
 
 	// sort the points on stitching line from one end point to another end point.
 	sort_seam_pixel_lst(seam_pixel_lst, sorted_seam_pixel_lst);
-	//sort_seam_pixel_lst(discarded_seam_pixel_lst, sorted_seam_pixel_lst);
 
 
 
 	// build the cite range for each in target image. consider the previous wavefront and its neighbor.
 
 	build_range_map_with_side_addition(sorted_seam_pixel_lst);
-	end = clock();
-	cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-	printf("Time = %f\n", cpu_time_used);
+	//end = clock();
+	//cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+	//printf("Time = %f\n", cpu_time_used);
 	//imwrite("test_range.png", test_wavefront_marching);
 
 	//return 0;
@@ -103,7 +91,7 @@ int main()
 
 
 	// generate a list of lists consists of superpixels and lts pixels.
-	// vector<vector<Point>> sup_pxl_lst = build_superpixel_lst();
+	//vector<vector<Point>> sup_pxl_lst = build_superpixel_lst();
 	
 
 	// initialize the color compensation map difference of the seam_pixel_lst. 
@@ -122,6 +110,8 @@ int main()
 	// to calculate the color for all pixels in target image.
 	update_color_comp_map_range_anomaly_ver(pixel_wise_lst);
 	//update_color_comp_map_range_anomaly_ver(sup_pxl_lst);
+	// update_color_comp_map_range_anomaly_and_parallel_ver(pixel_wise_lst);
+
 
 
 
