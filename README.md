@@ -7,10 +7,15 @@ code for paper "An Adaptive Joint Bilateral Interpolation-Based Color Blending M
 
 In "main.cpp", line 21, 22, 23 change parameters used in algorithm. 
 
-#### How to enable parallel processing feature
+#### How to disable parallel processing feature
 
-In "main.cpp", comment out line 111 and uncomment line 113 will enable the parallel processing feature.
+In "main.cpp", comment out line 113 and uncomment line 111 will disable the parallel processing feature.
 
+### Enviroment
+* Windos 10 64-bit
+* Visual Studio 2019
+* Visual Studio platform toolset LLVM-clang
+* ISO C++ 17 
 
 
 
@@ -25,7 +30,13 @@ In "main.cpp", comment out line 111 and uncomment line 113 will enable the paral
 
 3. 2022 May 1: 
    * Comment out  the superpixel based method related code. 
+
 4.  2022 May 18: 
    * Add the parallel processing feature to our code, so the execution time can be greatly reduced. (from around 250 seconds to 30 seconds, and with the compilation toolset set to LLVM in Visual Studio 2019, the execution time can be further reduced to around  3 seconds.)
    * Add high resolution images from experimental result.
+
+5. 2022 June 8:
+   * Set the parallel processing feature enable as default.
+   * Add five original resolution color corrected results.
+   * Add the description of execution enviroment.
 

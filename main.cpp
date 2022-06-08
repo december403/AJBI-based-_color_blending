@@ -108,9 +108,9 @@ int main()
 	}
 
 	// to calculate the color for all pixels in target image.
-	update_color_comp_map_range_anomaly_ver(pixel_wise_lst);
+	// update_color_comp_map_range_anomaly_ver(pixel_wise_lst);
 	//update_color_comp_map_range_anomaly_ver(sup_pxl_lst);
-	// update_color_comp_map_range_anomaly_and_parallel_ver(pixel_wise_lst);
+	update_color_comp_map_range_anomaly_and_parallel_ver(pixel_wise_lst);
 
 
 
