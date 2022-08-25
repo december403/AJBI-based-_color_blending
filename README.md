@@ -11,13 +11,14 @@ In "main.cpp", line 21, 22, 23 change parameters used in algorithm.
 
 In "main.cpp", comment out line 113 and uncomment line 111 will disable the parallel processing feature.
 
-### Enviroment
+## Enviroment
 * Windos 10 64-bit
 * Visual Studio 2019
 * Visual Studio platform toolset LLVM-clang
 * ISO C++ 17 
 
-
+## High resolution images of blended results
+https://drive.google.com/drive/folders/1J-deo3aMMBK72u9mcZAB0r9rmCSAd8gR?usp=sharing
 
 
 
@@ -40,3 +41,6 @@ In "main.cpp", comment out line 113 and uncomment line 111 will disable the para
    * Add five original resolution color corrected results.
    * Add the description of execution enviroment.
 
+6. 2022 August 25:
+   * Add high resolution images of blended results
+   
